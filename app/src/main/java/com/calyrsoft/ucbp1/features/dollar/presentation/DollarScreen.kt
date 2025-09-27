@@ -111,7 +111,7 @@ fun DollarScreen(
 
 @Composable
 fun CurrentDollarCard(dollar: DollarModel) {
-    // Parser local: admite "6.96 / 7.06", "6.96|7.06", "6.96,7.06" o "6.96 7.06"
+    // Parser tolerante: "6.96 / 7.06" | "6.96|7.06" | "6.96,7.06" | "6.96 7.06"
     fun parsePair(text: String?): Pair<Double, Double> {
         if (text.isNullOrBlank()) return 0.0 to 0.0
         val parts = text
@@ -120,7 +120,7 @@ fun CurrentDollarCard(dollar: DollarModel) {
             .replace("/", " ")
             .split(" ")
             .filter { it.isNotBlank() }
-        val buy = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
+        val buy  = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
         val sell = parts.getOrNull(1)?.toDoubleOrNull() ?: buy
         return buy to sell
     }
@@ -138,7 +138,7 @@ fun CurrentDollarCard(dollar: DollarModel) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                text = "Tipo de cambio",
+                text = "Valor Actual",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -146,23 +146,21 @@ fun CurrentDollarCard(dollar: DollarModel) {
 
             Spacer(Modifier.height(16.dp))
 
-            // Grid 2x2: Oficial/Paralelo × Compra/Venta
+            // Grid 2 × 2: Oficial/Paralelo × Compra/Venta
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    RateTile(label = "Oficial • Compra", value = oBuy)
-                    RateTile(label = "Paralelo • Compra", value = pBuy)
+                    RateTile("Oficial • Compra", oBuy)
+                    RateTile("Paralelo • Compra", pBuy)
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    RateTile(label = "Oficial • Venta", value = oSell)
-                    RateTile(label = "Paralelo • Venta", value = pSell)
+                    RateTile("Oficial • Venta", oSell)
+                    RateTile("Paralelo • Venta", pSell)
                 }
             }
 
             Spacer(Modifier.height(12.dp))
-
-            // Usa el timestamp de tu modelo (si tu repo lo setea)
             Text(
-                text = "Última actualización: ${formatDate(dollar.timestamp)}",
+                text = "Actualizado: ${formatDate(dollar.timestamp)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -184,14 +182,13 @@ private fun RateTile(label: String, value: Double) {
             Text(label, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(4.dp))
             Text(
-                text = String.format(Locale.US, "$ %.2f", value),
+                text = if (value == 0.0) "N/A" else String.format(Locale.US, "$ %.2f", value),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
         }
     }
 }
-
 @Composable
 fun DollarHistoryList(history: List<DollarModel>) {
     if (history.isEmpty()) {
@@ -215,7 +212,6 @@ fun DollarHistoryList(history: List<DollarModel>) {
 
 @Composable
 fun DollarHistoryItem(dollar: DollarModel) {
-    // Parser duplicado local para mantener el archivo autocontenido
     fun parsePair(text: String?): Pair<Double, Double> {
         if (text.isNullOrBlank()) return 0.0 to 0.0
         val parts = text
@@ -224,7 +220,7 @@ fun DollarHistoryItem(dollar: DollarModel) {
             .replace("/", " ")
             .split(" ")
             .filter { it.isNotBlank() }
-        val buy = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
+        val buy  = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
         val sell = parts.getOrNull(1)?.toDoubleOrNull() ?: buy
         return buy to sell
     }
@@ -236,29 +232,37 @@ fun DollarHistoryItem(dollar: DollarModel) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
             Text(
                 text = formatDate(dollar.timestamp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
-            Spacer(Modifier.height(6.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Column {
                     Text("Oficial", style = MaterialTheme.typography.labelLarge)
-                    Text("Compra: ${String.format(Locale.US, "%.2f", oBuy)}")
-                    Text("Venta:  ${String.format(Locale.US, "%.2f", oSell)}")
+                    Text("Compra: ${if (oBuy == 0.0) "N/A" else String.format(Locale.US, "%.2f", oBuy)}")
+                    Text("Venta:  ${if (oSell == 0.0) "N/A" else String.format(Locale.US, "%.2f", oSell)}")
                 }
                 Column {
                     Text("Paralelo", style = MaterialTheme.typography.labelLarge)
-                    Text("Compra: ${String.format(Locale.US, "%.2f", pBuy)}")
-                    Text("Venta:  ${String.format(Locale.US, "%.2f", pSell)}")
+                    Text("Compra: ${if (pBuy == 0.0) "N/A" else String.format(Locale.US, "%.2f", pBuy)}")
+                    Text("Venta:  ${if (pSell == 0.0) "N/A" else String.format(Locale.US, "%.2f", pSell)}")
                 }
             }
         }
     }
 }
-
 // Utilidades
 private fun formatDate(timestamp: Long): String {
     return try {
