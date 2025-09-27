@@ -286,40 +286,48 @@ fun DollarHistoryList(history: List<DollarModel>) {
         }
     }
 }
-
 @Composable
 fun DollarHistoryItem(dollar: DollarModel) {
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp)
         ) {
-            Column {
+            // Fecha
+            Text(
+                text = formatDate(dollar.timestamp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Oficial: Compra / Venta
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
-                    text = formatDate(dollar.timestamp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    text = "Oficial Compra: $${dollar.officialBuy ?: "-"}",
+                    style = MaterialTheme.typography.bodyMedium
                 )
+                Text(
+                    text = "Oficial Venta: $${dollar.officialSell ?: "-"}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(
-                        text = "Oficial: $${dollar.dollarOfficial ?: "N/A"}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Text(
-                        text = "Paralelo: $${dollar.dollarParallel ?: "N/A"}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+            // Paralelo: Compra / Venta
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(
+                    text = "Paralelo Compra: $${dollar.parallelBuy ?: "-"}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Paralelo Venta: $${dollar.parallelSell ?: "-"}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

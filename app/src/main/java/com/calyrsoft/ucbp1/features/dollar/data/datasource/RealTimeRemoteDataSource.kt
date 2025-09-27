@@ -22,16 +22,31 @@ class RealTimeRemoteDataSource {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val value = snapshot.getValue(DollarModel::class.java)
                 if (value != null) {
-                    // Agrega timestamp actual si no viene de Firebase
-                    val dollarWithTimestamp = value.copy(
-                        timestamp = if (value.timestamp == 0L) System.currentTimeMillis() else value.timestamp
+                    val withDefaults = value.copy(
+                        // timestamp seguro
+                        timestamp = if (value.timestamp == 0L) System.currentTimeMillis() else value.timestamp,
+                        // fallbacks: si no hay compra/venta en Firebase, usa el oficial/paralelo
+                        officialBuy   = value.officialBuy   ?: value.dollarOfficial,
+                        officialSell  = value.officialSell  ?: value.dollarOfficial,
+                        parallelBuy   = value.parallelBuy   ?: value.dollarParallel,
+                        parallelSell  = value.parallelSell  ?: value.dollarParallel
                     )
-                    trySend(dollarWithTimestamp)
+                    trySend(withDefaults)
                 } else {
-                    // dentro de onDataChange, en el else:
-                    trySend(DollarModel("0", "0", "0", "0", "0", "0", System.currentTimeMillis()))
+                    trySend(
+                        DollarModel(
+                            dollarOfficial = "0",
+                            dollarParallel = "0",
+                            officialBuy = "0",
+                            officialSell = "0",
+                            parallelBuy = "0",
+                            parallelSell = "0",
+                            timestamp = System.currentTimeMillis()
+                        )
+                    )
                 }
             }
+
         }
 
         val database = Firebase.database
