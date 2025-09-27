@@ -24,10 +24,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,10 +55,13 @@ fun DollarScreen(
                 title = "Cotización del Dólar",
                 navController = navController,
                 actions = {
-                    IconButton(onClick = { viewModelDollar.loadHistory() }) {
+                    IconButton(
+                        onClick = { viewModelDollar.loadHistory() }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Actualizar"
+                            contentDescription = "Actualizar",
+                            tint = Color.White
                         )
                     }
                 }
@@ -89,7 +94,7 @@ fun DollarScreen(
                 }
 
                 is DollarViewModel.DollarUIState.Success -> {
-                    // Card con valores actuales (4 campos)
+                    // Card con valores actuales
                     CurrentDollarCard(dollar = stateValue.data)
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -111,23 +116,6 @@ fun DollarScreen(
 
 @Composable
 fun CurrentDollarCard(dollar: DollarModel) {
-    // Parser tolerante: "6.96 / 7.06" | "6.96|7.06" | "6.96,7.06" | "6.96 7.06"
-    fun parsePair(text: String?): Pair<Double, Double> {
-        if (text.isNullOrBlank()) return 0.0 to 0.0
-        val parts = text
-            .replace(",", " ")
-            .replace("|", " ")
-            .replace("/", " ")
-            .split(" ")
-            .filter { it.isNotBlank() }
-        val buy  = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
-        val sell = parts.getOrNull(1)?.toDoubleOrNull() ?: buy
-        return buy to sell
-    }
-
-    val (oBuy, oSell) = parsePair(dollar.dollarOfficial)
-    val (pBuy, pSell) = parsePair(dollar.dollarParallel)
-
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(
@@ -136,7 +124,9 @@ fun CurrentDollarCard(dollar: DollarModel) {
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
             Text(
                 text = "Valor Actual",
                 style = MaterialTheme.typography.titleLarge,
@@ -144,23 +134,29 @@ fun CurrentDollarCard(dollar: DollarModel) {
                 color = MaterialTheme.colorScheme.primary
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Grid 2 × 2: Oficial/Paralelo × Compra/Venta
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    RateTile("Oficial • Compra", oBuy)
-                    RateTile("Paralelo • Compra", pBuy)
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    RateTile("Oficial • Venta", oSell)
-                    RateTile("Paralelo • Venta", pSell)
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                DollarValueItem(
+                    title = "Dólar Oficial",
+                    value = dollar.dollarOfficial ?: "N/A",
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                DollarValueItem(
+                    title = "Dólar Paralelo",
+                    value = dollar.dollarParallel ?: "N/A",
+                    color = MaterialTheme.colorScheme.secondary
+                )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                text = "Actualizado: ${formatDate(dollar.timestamp)}",
+                text = "Actualizado: ${getCurrentTime()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -169,26 +165,23 @@ fun CurrentDollarCard(dollar: DollarModel) {
 }
 
 @Composable
-private fun RateTile(label: String, value: Double) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Text(label, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = if (value == 0.0) "N/A" else String.format(Locale.US, "$ %.2f", value),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-        }
+fun DollarValueItem(title: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color.copy(alpha = 0.8f)
+        )
+
+        Text(
+            text = "$$value",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
     }
 }
+
 @Composable
 fun DollarHistoryList(history: List<DollarModel>) {
     if (history.isEmpty()) {
@@ -200,8 +193,7 @@ fun DollarHistoryList(history: List<DollarModel>) {
         )
     } else {
         LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(history) { dollar ->
                 DollarHistoryItem(dollar = dollar)
@@ -212,58 +204,47 @@ fun DollarHistoryList(history: List<DollarModel>) {
 
 @Composable
 fun DollarHistoryItem(dollar: DollarModel) {
-    fun parsePair(text: String?): Pair<Double, Double> {
-        if (text.isNullOrBlank()) return 0.0 to 0.0
-        val parts = text
-            .replace(",", " ")
-            .replace("|", " ")
-            .replace("/", " ")
-            .split(" ")
-            .filter { it.isNotBlank() }
-        val buy  = parts.getOrNull(0)?.toDoubleOrNull() ?: 0.0
-        val sell = parts.getOrNull(1)?.toDoubleOrNull() ?: buy
-        return buy to sell
-    }
-
-    val (oBuy, oSell) = parsePair(dollar.dollarOfficial)
-    val (pBuy, pSell) = parsePair(dollar.dollarParallel)
-
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = formatDate(dollar.timestamp),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            Column {
+                Text(
+                    text = formatDate(dollar.timestamp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
 
-            Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text("Oficial", style = MaterialTheme.typography.labelLarge)
-                    Text("Compra: ${if (oBuy == 0.0) "N/A" else String.format(Locale.US, "%.2f", oBuy)}")
-                    Text("Venta:  ${if (oSell == 0.0) "N/A" else String.format(Locale.US, "%.2f", oSell)}")
-                }
-                Column {
-                    Text("Paralelo", style = MaterialTheme.typography.labelLarge)
-                    Text("Compra: ${if (pBuy == 0.0) "N/A" else String.format(Locale.US, "%.2f", pBuy)}")
-                    Text("Venta:  ${if (pSell == 0.0) "N/A" else String.format(Locale.US, "%.2f", pSell)}")
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(
+                        text = "Oficial: $${dollar.dollarOfficial ?: "N/A"}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Text(
+                        text = "Paralelo: $${dollar.dollarParallel ?: "N/A"}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
     }
 }
-// Utilidades
+
+// Funciones de utilidad
+private fun getCurrentTime(): String {
+    return SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+}
+
 private fun formatDate(timestamp: Long): String {
     return try {
         SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
