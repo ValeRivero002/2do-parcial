@@ -54,7 +54,7 @@ class DollarViewModel(
         viewModelScope.launch {
             try {
                 val history = localDataSource.getAllOrderedByDate()
-                val currentData = (_uiState.value as? DollarUIState.Success)?.data ?: DollarModel("0", "0")
+                val currentData = (_uiState.value as? DollarUIState.Success)?.data ?: DollarModel("0", "0", "0", "0", "0", "0")
                 _uiState.value = DollarUIState.Success(currentData, history)
             } catch (e: Exception) {
                 // No cambiar el estado si falla la carga del histórico

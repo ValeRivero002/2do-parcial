@@ -28,7 +28,8 @@ class RealTimeRemoteDataSource {
                     )
                     trySend(dollarWithTimestamp)
                 } else {
-                    trySend(DollarModel("0", "0", System.currentTimeMillis()))
+                    // dentro de onDataChange, en el else:
+                    trySend(DollarModel("0", "0", "0", "0", "0", "0", System.currentTimeMillis()))
                 }
             }
         }

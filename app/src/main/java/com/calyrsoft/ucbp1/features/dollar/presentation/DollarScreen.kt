@@ -136,34 +136,53 @@ fun CurrentDollarCard(dollar: DollarModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Fila 1: Oficial (Compra / Venta)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 DollarValueItem(
-                    title = "Dólar Oficial",
-                    value = dollar.dollarOfficial ?: "N/A",
+                    title = "Oficial Compra",
+                    value = dollar.officialBuy ?: "-",
                     color = MaterialTheme.colorScheme.primary
                 )
-
                 DollarValueItem(
-                    title = "Dólar Paralelo",
-                    value = dollar.dollarParallel ?: "N/A",
+                    title = "Oficial Venta",
+                    value = dollar.officialSell ?: "-",
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Fila 2: Paralelo (Compra / Venta)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                DollarValueItem(
+                    title = "Paralelo Compra",
+                    value = dollar.parallelBuy ?: "-",
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                DollarValueItem(
+                    title = "Paralelo Venta",
+                    value = dollar.parallelSell ?: "-",
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Usa el timestamp del dato (no la hora del dispositivo)
             Text(
-                text = "Actualizado: ${getCurrentTime()}",
+                text = "Actualizado: ${formatDate(dollar.timestamp)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }
     }
 }
-
 @Composable
 fun DollarValueItem(title: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
