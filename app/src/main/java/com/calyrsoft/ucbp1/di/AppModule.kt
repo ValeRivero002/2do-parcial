@@ -4,7 +4,6 @@ import NotificationViewModel
 import com.calyrsoft.ucbp1.core.AuthManager
 import com.calyrsoft.ucbp1.features.dollar.data.database.AppRoomDatabase
 import com.calyrsoft.ucbp1.features.dollar.data.datasource.DollarLocalDataSource
-import com.calyrsoft.ucbp1.features.dollar.data.repository.DollarRepositoryImpl
 import com.calyrsoft.ucbp1.features.dollar.domain.repository.IDollarRepository
 import com.calyrsoft.ucbp1.features.dollar.domain.usecase.FetchDollarUseCase
 import com.calyrsoft.ucbp1.features.dollar.presentation.DollarHistoryViewModel
