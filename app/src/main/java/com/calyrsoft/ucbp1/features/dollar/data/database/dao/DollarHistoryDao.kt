@@ -10,11 +10,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DollarHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entry: DollarHistoryEntity)
+    suspend fun insert(entity: DollarHistoryEntity)
 
     @Query("SELECT * FROM dollar_history ORDER BY updatedAt DESC")
-    fun observeAll(): Flow<List<DollarHistoryEntity>>
-
-    @Query("SELECT * FROM dollar_history ORDER BY updatedAt DESC LIMIT 1")
-    suspend fun getLatest(): DollarHistoryEntity?
+    fun getAll(): Flow<List<DollarHistoryEntity>>
 }

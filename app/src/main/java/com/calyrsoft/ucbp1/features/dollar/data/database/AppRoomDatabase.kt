@@ -1,11 +1,18 @@
 // app/src/main/java/com/calyrsoft/ucbp1/features/dollar/data/database/AppRoomDatabase.kt
 package com.calyrsoft.ucbp1.features.dollar.data.database
 
-import androidx.room.*
+import androidx.room.Database
+import androidx.room.Dao
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
+import androidx.room.Query
+import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.flow.Flow
 
-/* ===================== AÑADE ESTO: ENTITY ===================== */
 @Entity(tableName = "dollar_history")
 data class DollarHistoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -16,40 +23,32 @@ data class DollarHistoryEntity(
     val updatedAt: Long
 )
 
-/* ===================== AÑADE ESTO: DAO ===================== */
 @Dao
 interface DollarHistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: DollarHistoryEntity)
 
     @Query("SELECT * FROM dollar_history ORDER BY updatedAt DESC")
-    fun observeAll(): kotlinx.coroutines.flow.Flow<List<DollarHistoryEntity>>
+    fun observeAll(): Flow<List<DollarHistoryEntity>>
 
     @Query("SELECT * FROM dollar_history ORDER BY updatedAt DESC LIMIT 1")
     suspend fun getLatest(): DollarHistoryEntity?
 }
 
-/* ========== TU Database: SOLO EDITA entities + version + migration ========== */
 @Database(
-    entities = [
-        // ...tus otras entidades,
-        DollarHistoryEntity::class // <-- AÑADIDO
-    ],
-    version = 2, // <-- SUBE LA VERSIÓN (ajusta desde la que tengas)
+    entities = [DollarHistoryEntity::class],
+    version = 2,                // súbelo respecto a tu versión previa
     exportSchema = true
 )
 abstract class AppRoomDatabase : RoomDatabase() {
 
-    // ...tus DAOs existentes
-
-    /* AÑADE ESTA FUNCIÓN: */
     abstract fun dollarHistoryDao(): DollarHistoryDao
 
     companion object {
-        /* AÑADE/ACTUALIZA esta MIGRATION acorde a tu versión anterior -> 2 */
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
+                db.execSQL(
+                    """
                     CREATE TABLE IF NOT EXISTS dollar_history(
                       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                       officialBuy REAL NOT NULL,
@@ -58,7 +57,8 @@ abstract class AppRoomDatabase : RoomDatabase() {
                       parallelSell REAL NOT NULL,
                       updatedAt INTEGER NOT NULL
                     )
-                """.trimIndent())
+                    """.trimIndent()
+                )
             }
         }
     }

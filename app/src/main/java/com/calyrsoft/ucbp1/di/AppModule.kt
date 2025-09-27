@@ -1,9 +1,11 @@
 package com.calyrsoft.ucbp1.di
 
 import NotificationViewModel
+import androidx.room.Room
 import com.calyrsoft.ucbp1.core.AuthManager
 import com.calyrsoft.ucbp1.features.dollar.data.database.AppRoomDatabase
 import com.calyrsoft.ucbp1.features.dollar.data.datasource.DollarLocalDataSource
+import com.calyrsoft.ucbp1.features.dollar.data.datasource.RealTimeRemoteDataSource
 import com.calyrsoft.ucbp1.features.dollar.domain.repository.IDollarRepository
 import com.calyrsoft.ucbp1.features.dollar.domain.usecase.FetchDollarUseCase
 import com.calyrsoft.ucbp1.features.dollar.presentation.DollarHistoryViewModel
@@ -31,15 +33,17 @@ import com.calyrsoft.ucbp1.features.profile.domain.repository.ProfileRepository
 import com.calyrsoft.ucbp1.features.profile.domain.usecase.GetProfileUseCase
 import com.calyrsoft.ucbp1.features.profile.presentation.ProfileViewModel
 import okhttp3.OkHttpClient
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-
-
+import com.calyrsoft.ucbp1.features.dollar.data.database.DollarHistoryDao
 val appModule = module {
+
     single { AuthManager(get()) }
+
     // OkHttpClient
     single {
         OkHttpClient.Builder()
@@ -49,7 +53,7 @@ val appModule = module {
             .build()
     }
 
-    // Retrofit
+    // Retrofit base (GitHub)
     single {
         Retrofit.Builder()
             .baseUrl("https://api.github.com/")
@@ -59,46 +63,56 @@ val appModule = module {
     }
 
     // GithubService
-    single<GithubService> {
-        get<Retrofit>().create(GithubService::class.java)
-    }
+    single<GithubService> { get<Retrofit>().create(GithubService::class.java) }
 
-    // MovieDB Service (base URL diferente)
+    // MovieDB Service (otra base URL)
     single<MovieService> {
         get<Retrofit>().newBuilder()
             .baseUrl("https://api.themoviedb.org/3/")
+            .client(get())
             .build()
             .create(MovieService::class.java)
     }
 
-    // Repositories
+    // ========= Room DB =========
+    single {
+        Room.databaseBuilder(
+            androidContext(),
+            AppRoomDatabase::class.java,
+            "app_ucb.db"
+        )
+            .fallbackToDestructiveMigration(true) // <- nuevo overload
+            .build()
+    }
+    single<DollarHistoryDao> { get<AppRoomDatabase>().dollarHistoryDao() }
+
+    // ========= DataSources =========
+    single { RealTimeRemoteDataSource() }
+    single { DollarLocalDataSource(get()) } // si lo usas en tu VM de historial
+
+    // ========= Repositories =========
     single<LoginRepository> { LoginRepositoryImpl() }
-    single { com.calyrsoft.ucbp1.features.dollar.data.datasource.RealTimeRemoteDataSource() }
     single<ProfileRepository> { ProfileRepositoryImpl() }
-    single<IDollarRepository> { DollarRepositoryImpl(get(), get()) }
-    single { GithubRemoteDataSource(get()) }
     single<IGithubRepository> { GithubRepository(get()) }
-    single { MovieRemoteDataSource(get()) }
     single<MovieRepository> { MovieRepositoryImpl(get()) }
-    single { AppRoomDatabase.getDatabase(get()) }
-    single { get<AppRoomDatabase>().dollarDao() }
-    single { DollarLocalDataSource(get()) }
-    single { NotificationRepositoryImpl() as NotificationRepository }
+    single { NotificationRepositoryImpl() }
+    single<DollarHistoryDao> { get<AppRoomDatabase>().dollarHistoryDao() }
 
-
-    // UseCases
+    // ========= UseCases =========
     factory { LoginUseCase(get()) }
     factory { FetchDollarUseCase(get()) }
     factory { GetProfileUseCase(get()) }
     factory { FindByNickNameUseCase(get()) }
     factory { GetPopularMoviesUseCase(get()) }
 
-
-    // ViewModels
-    viewModel { LoginViewModel(get(),get ()) }
+    // ========= ViewModels =========
+    viewModel { LoginViewModel(get(), get()) }
     viewModel { ProfileViewModel(get()) }
+    // Ajusta a la firma real de tu VM:
+    // - Si DollarViewModel(fetchUseCase)  -> viewModel { DollarViewModel(get()) }
+    // - Si DollarViewModel(fetchUseCase, localDataSource) -> deja get(), get()
     viewModel { DollarViewModel(get(), get()) }
-    viewModel { GithubViewModel(get(),get ()) }
+    viewModel { GithubViewModel(get(), get()) }
     viewModel { MoviesViewModel(get()) }
     viewModel { DollarHistoryViewModel(get()) }
     viewModel { NotificationViewModel(get()) }
