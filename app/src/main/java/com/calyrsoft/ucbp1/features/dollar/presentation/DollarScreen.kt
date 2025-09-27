@@ -176,9 +176,10 @@ fun CurrentDollarCard(dollar: DollarModel) {
 
             // Usa el timestamp del dato (no la hora del dispositivo)
             Text(
-                text = "Actualizado: ${formatDate(dollar.timestamp)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                text = "Última actualización: ${formatDate(dollar.timestamp)}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = Color.Gray
             )
         }
     }
