@@ -113,7 +113,6 @@ fun DollarScreen(
         }
     }
 }
-
 @Composable
 fun CurrentDollarCard(dollar: DollarModel) {
     Card(
@@ -124,9 +123,7 @@ fun CurrentDollarCard(dollar: DollarModel) {
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = "Valor Actual",
                 style = MaterialTheme.typography.titleLarge,
@@ -136,50 +133,118 @@ fun CurrentDollarCard(dollar: DollarModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Fila 1: Oficial (Compra / Venta)
+            // --- FILA OFICIAL ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                DollarValueItem(
-                    title = "Oficial Compra",
-                    value = dollar.officialBuy ?: "-",
-                    color = MaterialTheme.colorScheme.primary
-                )
-                DollarValueItem(
-                    title = "Oficial Venta",
-                    value = dollar.officialSell ?: "-",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+                // Oficial Compra
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFE8F5E9), // verde claro
+                        contentColor = Color(0xFF2E7D32)    // verde
+                    ),
+                    modifier = Modifier
+                        .weight(1f)          // 👈 weight aplicado DIRECTO al hijo del Row
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Oficial Compra", style = MaterialTheme.typography.labelLarge)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if ((dollar.officialBuy ?: "").isBlank()) "$ -" else "$${dollar.officialBuy}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Fila 2: Paralelo (Compra / Venta)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                DollarValueItem(
-                    title = "Paralelo Compra",
-                    value = dollar.parallelBuy ?: "-",
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                DollarValueItem(
-                    title = "Paralelo Venta",
-                    value = dollar.parallelSell ?: "-",
-                    color = MaterialTheme.colorScheme.secondary
-                )
+                // Oficial Venta
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE), // rojo claro
+                        contentColor = Color(0xFFC62828)    // rojo
+                    ),
+                    modifier = Modifier
+                        .weight(1f)          // 👈 igual aquí
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Oficial Venta", style = MaterialTheme.typography.labelLarge)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if ((dollar.officialSell ?: "").isBlank()) "$ -" else "$${dollar.officialSell}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Usa el timestamp del dato (no la hora del dispositivo)
+            // --- FILA PARALELO ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Paralelo Compra
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFE8F5E9), // verde claro
+                        contentColor = Color(0xFF2E7D32)    // verde
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Paralelo Compra", style = MaterialTheme.typography.labelLarge)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if ((dollar.parallelBuy ?: "").isBlank()) "$ -" else "$${dollar.parallelBuy}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Paralelo Venta
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFEBEE), // rojo claro
+                        contentColor = Color(0xFFC62828)    // rojo
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Paralelo Venta", style = MaterialTheme.typography.labelLarge)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if ((dollar.parallelSell ?: "").isBlank()) "$ -" else "$${dollar.parallelSell}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             Text(
                 text = "Última actualización: ${formatDate(dollar.timestamp)}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = Color.Gray
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }
     }
